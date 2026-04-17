@@ -1,0 +1,969 @@
+Option Explicit
+
+Dim MesNr As Variant
+Public ParVal(1, 600) As Variant
+
+Function FileExists(FilePath As String) As Boolean
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    FileExists = fso.FileExists(FilePath)
+    Set fso = Nothing
+End Function
+
+Function GetFileName(FullPath As String) As String
+    Dim separator As String
+    separator = Application.PathSeparator
+    GetFileName = Right(FullPath, Len(FullPath) - InStrRev(FullPath, separator))
+End Function
+
+Sub Makro1()
+'
+' Makro am 23.05.2008 von E. Lüpfert aufgezeichnet
+'
+' Tastenkombination: Strg+e
+
+' IMPORTIEREN VON SPEKTREN INS EXCEL-SHEET
+
+Dim Datname As String
+Dim DateiName As Variant
+Dim i As Integer
+
+' Berechnung automatisch.
+    With Application
+        .Calculation = xlAutomatic
+    End With
+
+' Dateiname
+    Datname = ActiveWorkbook.Name
+
+' Schleife
+    Do
+    
+    ' Nummer abfragen
+        MesNr = InputBox("Please insert number of measurement (99=end)", "Number", MesNr + 1)
+        If MesNr = "" Then Exit Do
+        If (MesNr < 1) Then Exit Do
+        If MesNr > 5 Then Exit Do
+       
+    
+    ' Datei öffnen (Komma getrennt)
+    
+        DateiName = Application.GetOpenFilename("Spectrometer-Data (*.asc; *.txt), *.asc;*.txt", 2, _
+                    "Import Spectrometer Measurement Ascii File", , False)
+        If DateiName = False Then Exit Sub
+        
+        
+        Workbooks.OpenText Filename:=DateiName, Origin:=xlMSDOS, _
+            StartRow:=1, DataType:=xlDelimited, TextQualifier:=xlDoubleQuote, _
+            ConsecutiveDelimiter:=False, Tab:=True, Semicolon:=False, Comma:=False _
+            , Space:=False, Other:=False, FieldInfo:=Array(Array(1, 1), Array(2, 1)), _
+            DecimalSeparator:=",", ThousandsSeparator:=".", TrailingMinusNumbers:=False
+        
+    ' Werte in linke Spalte rücken
+        Range("A93").Select
+        Range(Selection, Selection.End(xlDown)).Select
+        Selection.Delete Shift:=xlToLeft
+        Rows("74:79").Select
+        Selection.Delete Shift:=xlUp
+        Range("A1").Select
+        Range("A1:A539").Select
+        Selection.Copy
+        
+        Windows(Datname).Activate
+        
+        Select Case MesNr
+        Case 1
+        Range("Mes1").Select
+        Case 2
+        Range("Mes2").Select
+        Case 3
+        Range("Mes3").Select
+        Case 4
+        Range("Mes4").Select
+        Case 5
+        Range("Mes5").Select
+        End Select
+        
+        ActiveCell.Offset(1, 0).Range("A1").Select
+            ActiveCell.FormulaR1C1 = DateiName
+        ActiveCell.Offset(1, 0).Range("A1").Select
+    ' Spektrum einsetzen
+        Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+                :=False, Transpose:=False
+
+    Loop Until MesNr >= 5
+    
+    
+    
+    
+' Zeroline (-1), Baseline(0), Reference
+    
+   
+    For i = -1 To 0
+
+        Select Case i
+            Case -1
+            DateiName = Application.GetOpenFilename("Zeroline-Data (*.asc; *.txt), *.asc;*.txt", 2, _
+                    "Import Zeroline (0%) Ascii File", , False)
+            Case 0
+            DateiName = Application.GetOpenFilename("Baseline-Data (*.asc; *.txt), *.asc;*.txt", 2, _
+                    "Import Baseline (100%) Ascii File", , False)
+        End Select
+    
+    ' Datei öffnen (Komma getrennt)
+    
+    If DateiName = False Then Exit For
+    
+        Workbooks.OpenText Filename:=DateiName, Origin:=xlMSDOS, _
+            StartRow:=1, DataType:=xlDelimited, TextQualifier:=xlDoubleQuote, _
+            ConsecutiveDelimiter:=False, Tab:=True, Semicolon:=False, Comma:=False _
+            , Space:=False, Other:=False, FieldInfo:=Array(Array(1, 1), Array(2, 1)), _
+            DecimalSeparator:=",", ThousandsSeparator:=".", TrailingMinusNumbers:=False
+        
+    ' Werte in linke Spalte rücken
+        Range("A93").Select
+        Range(Selection, Selection.End(xlDown)).Select
+        Selection.Delete Shift:=xlToLeft
+        Rows("74:79").Select
+        Selection.Delete Shift:=xlUp
+        Range("A1").Select
+        Range("A1:A539").Select
+        Selection.Copy
+        
+        Windows(Datname).Activate
+        
+        Select Case i
+        Case -1
+        Range("MesB1").Select
+        Case 0
+        Range("MesB2").Select
+        End Select
+        
+        ActiveCell.Offset(1, 0).Range("A1").Select
+            ActiveCell.FormulaR1C1 = DateiName
+        ActiveCell.Offset(1, 0).Range("A1").Select
+    ' Spektrum einsetzen
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+            :=False, Transpose:=False
+    
+    Next i
+        
+    Range("Refname").Select
+
+End Sub
+
+
+Sub Makro2()
+'
+' Makro am 23.05.2008 von E. Lüpfert aufgezeichnet
+'
+
+' Kopieren von Stammtabelle in Datasheet
+
+Dim BlattName As String
+Dim VorlName As String
+Dim NeuAltTyp As VbMsgBoxResult
+Dim DateiName As Variant
+Dim NeuName As String
+Dim wb As Workbook
+Dim fileExtension As String
+
+' Berechnung automatisch.
+    With Application
+        .Calculation = xlAutomatic
+    End With
+
+'Datasheet-Name
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("D1").Select
+    BlattName = ActiveCell.Value
+
+' Vorlagen-Name
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("X1").Select
+    VorlName = ActiveCell.Value
+
+' vorhandene Datei auswählen?
+    NeuAltTyp = MsgBox("Input into existing File?", vbYesNoCancel)
+    Select Case NeuAltTyp
+        Case vbYes
+' Name der Arbeitsmappe
+            DateiName = Application.GetOpenFilename("Spectrometer-Data (*.xls; *.xlsm; *.xlsx), *.xls;*.xlsm;*.xlsx", 2, _
+                        "Choose DataFile for the new Sheet", , False)
+            If DateiName = False Then Exit Sub
+            NeuName = GetFileName(CStr(DateiName))
+            On Error Resume Next
+            Set wb = Workbooks(NeuName)
+            If wb Is Nothing Then
+                Set wb = Workbooks.Open(Filename:=DateiName, UpdateLinks:=0)
+            End If
+            On Error GoTo 0
+            
+            If Not wb Is Nothing Then
+                wb.Activate
+                ThisWorkbook.Activate
+                Sheets(VorlName).Copy After:=wb.Sheets(wb.Sheets.Count)
+            End If
+        Case vbNo
+'Neue Datei
+            Sheets(VorlName).Copy
+            NeuName = ActiveWorkbook.Name
+            
+        Case vbCancel
+            Exit Sub
+        End Select
+
+' Datasheet benennen
+    Application.ScreenUpdating = False
+    
+    Sheets(VorlName).Name = BlattName
+        
+
+' Daten kopieren
+    ThisWorkbook.Activate
+    
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("E1:W1").Select
+    Selection.Copy
+
+' Daten einfügen in Mappe
+    Windows(NeuName).Activate
+    Sheets(BlattName).Select
+'    Application.CutCopyMode = False
+    Range("C5").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+    If IsEmpty(Range("C22")) = False Then
+        Range("C22").Cut Range("C24")
+    End If
+' move durations/cycle to right places
+    If Range("C21").Value Like "*c" Then
+        Range("C21").Cut Range("D21")
+        Range("D21").Replace "c", "", xlPart
+        Range("C21").Value = "-"
+        Range("C22").Value = "-"
+    End If
+' divide sample dimension in two get rid of x (10x10)
+If InStr(Range("C18"), "x") = 0 Then
+Else
+    Dim CE As String
+    Dim POS As Integer
+    Dim Xdim As String
+    Dim Ydim As String
+    
+    CE = Range("C18")
+    POS = InStr(1, CE, "x")
+    Xdim = Left(CE, POS - 1)
+    Ydim = Right(CE, Len(CE) - POS)
+    Range("C18") = Xdim
+    Range("C18").NumberFormat = "0"
+    Range("C18").HorizontalAlignment = xlRight
+    Range("D18") = Ydim
+    Range("D18").NumberFormat = "0"
+    Range("D18").HorizontalAlignment = xlLeft
+End If
+
+'Blattschutz
+'    ActiveSheet.Protect DrawingObjects:=True, Contents:=True, Scenarios:=True, _
+'        AllowFormattingCells:=True, AllowFormattingColumns:=True, _
+'        AllowFormattingRows:=True, AllowFiltering:=True, AllowUsingPivotTables:=True
+    
+' Speichern
+'    fName = Application.GetSaveAsFilename
+'Loop Until fName <> False
+'NewBook.SaveAs Filename:=fName
+        
+        DateiName = Application.GetSaveAsFilename(NeuName, "Spektren_Datei (*.xlsm), *.xlsm", 2, _
+                    "Save Spectra As (new) DataFile Name")
+        If DateiName = False Then Exit Sub
+        
+    fileExtension = LCase(Right(CStr(DateiName), 5))
+    
+    If InStr(fileExtension, ".xlsm") > 0 Then
+        ActiveWorkbook.SaveAs Filename:=DateiName, FileFormat:=52, _
+            Password:="", WriteResPassword:="", ReadOnlyRecommended:=False, _
+            CreateBackup:=False
+    ElseIf InStr(fileExtension, ".xlsx") > 0 Then
+        ActiveWorkbook.SaveAs Filename:=DateiName, FileFormat:=51, _
+            Password:="", WriteResPassword:="", ReadOnlyRecommended:=False, _
+            CreateBackup:=False
+    Else
+        ActiveWorkbook.SaveAs Filename:=DateiName, FileFormat:=56, _
+            Password:="", WriteResPassword:="", ReadOnlyRecommended:=False, _
+            CreateBackup:=False
+    End If
+
+End Sub
+
+Sub Makro11()
+'
+' Makro11 Makro
+' Makro am 25.05.2008 von E. Lüpfert aufgezeichnet
+'
+' Maske für Eingabe von Probendaten aufrufen
+'
+    Range("E9:Y9").Select
+    ActiveSheet.ShowDataForm
+End Sub
+
+
+Sub Makro14()
+'
+' Makro14 Makro
+' Makro am 25.05.2008 von E. Lüpfert aufgezeichnet
+'
+' Datenreihe als Kurve zufügen
+'
+    
+    ActiveSheet.ChartObjects("Diagramm 7").Activate
+    ActiveChart.ChartArea.Select
+    ActiveChart.SeriesCollection.Add Source:=ActiveSheet.Range("SpecAverage") _
+        , Rowcol:=xlColumns, SeriesLabels:=True, CategoryLabels:=False, Replace _
+        :=False
+    
+'    ActiveChart.SeriesCollection(3).Select
+'    With Selection.Border
+'        .ColorIndex = 5
+'        .Weight = xlThin
+'        .LineStyle = xlContinuous
+'    End With
+'    With Selection
+'        .MarkerBackgroundColorIndex = xlNone
+'        .MarkerForegroundColorIndex = xlNone
+'        .MarkerStyle = xlNone
+'        .Smooth = False
+'        .MarkerSize = 7
+'        .Shadow = False
+'    End With
+    
+'    ActiveWindow.Visible = False
+    ActiveWindow.Activate
+    
+    ActiveSheet.ChartObjects("Diagramm 8").Activate
+    ActiveChart.ChartArea.Select
+    ActiveChart.SeriesCollection.Add Source:=ActiveSheet.Range("SpecAverage") _
+        , Rowcol:=xlColumns, SeriesLabels:=True, CategoryLabels:=False, Replace _
+        :=False
+    
+    
+End Sub
+
+
+Sub Makro17()
+'
+' Makro17 Makro
+' Makro am 25.05.2008 von E. Lüpfert aufgezeichnet
+
+' Werte wieder zurück in Tabelle Kopieren
+'
+
+Dim Datname As String
+Dim SampleName As String
+    
+    Datname = ActiveWorkbook.Name
+    
+    SampleName = Range("C12").Value '(Messung-ID)
+    
+'Zeile finden
+    ThisWorkbook.Activate
+    Sheets(1).Select
+    Application.GoTo Reference:="SpekListeKompl"
+    Selection.Find(What:=SampleName, After:=ActiveCell, LookIn:=xlFormulas _
+        , LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+        MatchCase:=False, SearchFormat:=False).Activate
+
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("X1").Select
+    
+' Zahlenwerte der Ergebnisse
+    Windows(Datname).Activate
+    Range("D30").Select
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("AA1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+
+'solar gewichteter, mittlerer Reflexionsgrad
+    Windows(Datname).Activate
+    Range("C28:C30").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("AB1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+    Windows(Datname).Activate
+    Range("D35").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("AG1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+        
+' rho_hem bei 660nm
+    Windows(Datname).Activate
+    Range("C31").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("AE1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+    
+    
+    Windows(Datname).Activate
+    Range("D27").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("Z1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+        
+        Windows(Datname).Activate
+    Range("D33").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("AF1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+    
+    
+' gerichteter Reflexionsgrad
+    Windows(Datname).Activate
+    Range("C34:C36").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("AH1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+    
+' Charm-daten
+    Windows(Datname).Activate
+    Range("C39:C41").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("AN1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+        
+' solar gewichteter, gerichteter Reflexionsgrad
+    Windows(Datname).Activate
+    Range("C44:C46").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("AK1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+    
+' Kommentare und Beschreibungen auch zurück
+    Windows(Datname).Activate
+    Range("C13:C23").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ThisWorkbook.Activate
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("M1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=True
+    
+' Name der Datei
+    ActiveCell.Rows("1:1").EntireRow.Select
+    ActiveCell.Range("C1").Select
+    Application.CutCopyMode = False
+    ActiveCell.FormulaR1C1 = Datname
+
+End Sub
+
+Sub ExportMastertable()
+' Export of the Data from the Excel sheet coming from Lambda into one mastertable
+'
+Dim TheBook As String
+Dim TheSheet As String
+Dim i As Integer
+Dim LastRow As Long
+Dim masterTablePath As String
+
+'   Turn off switching between windows during copying
+    Application.ScreenUpdating = False
+'   Take the now active workbook to copy data from
+    TheBook = ActiveWorkbook.Name
+    TheSheet = ActiveSheet.Name
+    
+    Columns(59).ClearContents
+    Columns(60).ClearContents
+    
+    Erase ParVal
+' Call Sub CopyValues()
+    CopyValues2
+    
+'   Open Table
+    'masterTablePath = "\\newsol\reflectores\TableSamplesALL\OPAC_TableReflectanceALL.xlsm"
+    masterTablePath = "C:\Users\camp_la\Documents\Laura\OPAC\proyects\OPAC_TableReflectanceALL.xlsm"
+    
+    If Not FileExists(masterTablePath) Then
+        MsgBox "Master table file not found at: " & masterTablePath & vbCrLf & "Please check network connection.", vbCritical
+        Application.ScreenUpdating = True
+        Exit Sub
+    End If
+    
+    Workbooks.Open Filename:=masterTablePath
+    ' Workbooks.Open Filename:="C:\Users\camp_la\Documents\Laura\OPAC\proyects\OPAC_TableReflectanceALL.xlsm"
+    
+'   Deactivate filters if applied in mastertable
+    On Error Resume Next
+    If Worksheets("ReflectorsALL").AutoFilterMode Then
+        If Worksheets("ReflectorsALL").FilterMode Then
+            Worksheets("ReflectorsALL").ShowAllData
+        End If
+    End If
+    On Error GoTo 0
+    
+'   Find last row with measurements
+    LastRow = Workbooks("OPAC_TableReflectanceALL.xlsm").Sheets("ReflectorsALL").Cells(Rows.Count, 1).End(xlUp).Offset(1).Row
+    
+    '   Activate Table
+    Windows(TheBook).Activate
+    Worksheets(TheSheet).Activate
+    'Range("AZ1:AZ550").Copy
+    For i = 1 To 520
+        Workbooks("OPAC_TableReflectanceALL.xlsm").Sheets("ReflectorsALL").Cells(LastRow, i).Value = ParVal(1, i - 1)
+    Next i
+    
+'    Workbooks("OPAC_TableReflectanceALL.xlsm").Sheets("ReflectorsALL").Cells(LastRow, 1).PasteSpecial _
+'        xlPasteValues, Transpose:=True
+
+    Call CalcLosses(LastRow)
+
+'   Save and close table
+    Workbooks("OPAC_TableReflectanceALL.xlsm").Save
+    Workbooks("OPAC_TableReflectanceALL.xlsm").Close
+    
+    Application.ScreenUpdating = True
+    
+End Sub
+
+Sub ExportALLSheetsMastertable()
+'
+' Export of the Data from the Excel sheet coming from Lambda into one mastertable
+'
+Dim TheBook As String
+Dim TheSheet As String
+Dim ShNr As Integer
+Dim J As Integer
+Dim i As Integer
+Dim LastRow As Long
+Dim masterTablePath As String
+
+'   Turn off switching between windows during copying
+Application.ScreenUpdating = False
+
+'   Open Table
+
+TheBook = ActiveWorkbook.Name
+
+' masterTablePath = "\\newsol\reflectores\TableSamplesALL\OPAC_TableReflectanceALL.xlsm"
+masterTablePath = "C:\Users\camp_la\Documents\Laura\OPAC\proyects\OPAC_TableReflectanceALL.xlsm"
+
+If Not FileExists(masterTablePath) Then
+    MsgBox "Master table file not found at: " & masterTablePath & vbCrLf & "Please check network connection.", vbCritical
+    Application.ScreenUpdating = True
+    Exit Sub
+End If
+
+Workbooks.Open Filename:=masterTablePath
+
+
+'Deactivate filters if applied in mastertable
+On Error Resume Next
+If Worksheets("ReflectorsALL").AutoFilterMode Then
+    If Worksheets("ReflectorsALL").FilterMode Then
+        Worksheets("ReflectorsALL").ShowAllData
+    End If
+End If
+On Error GoTo 0
+
+Workbooks(TheBook).Activate
+ShNr = Worksheets.Count
+For J = 1 To ShNr
+
+    Worksheets(J).Activate
+
+'   Take the now active workbook to copy data from
+    
+    TheSheet = ActiveSheet.Name
+    
+    Columns(59).ClearContents
+    Columns(60).ClearContents
+    Erase ParVal
+' Call Sub CopyValues()
+    CopyValues2
+
+    
+    LastRow = Workbooks("OPAC_TableReflectanceALL.xlsm").Sheets("ReflectorsALL").Cells(Rows.Count, 1).End(xlUp).Offset(1).Row
+    
+    '   Activate Table
+    Windows(TheBook).Activate
+    Worksheets(TheSheet).Activate
+    
+'    Range("AZ1:AZ550").Copy
+'
+'    Workbooks("OPAC_TableReflectanceALL.xlsm").Sheets("ReflectorsALL").Cells(LastRow, 1).PasteSpecial _
+'        xlPasteValues, Transpose:=True
+    
+    For i = 1 To 520
+        Workbooks("OPAC_TableReflectanceALL.xlsm").Sheets("ReflectorsALL").Cells(LastRow, i).Value = ParVal(1, i - 1)
+    Next i
+'   Calculate reflectance drops
+    Call CalcLosses(LastRow)
+          
+    
+Next J
+    '   Save and close table
+    Workbooks("OPAC_TableReflectanceALL.xlsm").Save
+    Workbooks("OPAC_TableReflectanceALL.xlsm").Close
+    Application.ScreenUpdating = True
+    
+End Sub
+
+Sub CopyValues()
+
+Dim ColX As Integer
+
+ColX = 1
+'   Copy "Sample Code"
+    Cells(ColX, 51).Value = "Sample Code"
+
+'    Range("AY1").Value = "Sample Code"
+    Range("C5").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "OPAC Code"
+    Cells(ColX, 51).Value = "OPAC Code"
+    Range("C8").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Material Code"
+    Cells(ColX, 51).Value = "Material Code"
+    Range("C9").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Manufacturer"
+    Cells(ColX, 51).Value = "Manufacturer"
+    Range("C7").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Project"
+    Cells(ColX, 51).Value = "Project"
+    Range("C10").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Site/Test"
+    Cells(ColX, 51).Value = "Site/Test"
+    Range("C15").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Position/Observation"
+    Cells(ColX, 51).Value = "Position/Observation"
+    Range("C16").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 5
+'   Copy "Thickness"
+    Cells(ColX, 51).Value = "Thickness"
+    Range("C17").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Size"
+    Cells(ColX, 51).Value = "Size"
+    Range("C18").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+    
+    Cells(ColX, 51).Value = "Size 2"
+    Range("D18").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Number of cut edges"
+    Cells(ColX, 51).Value = "Number of cut edges"
+    Range("G9").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Measurement Date"
+    Cells(ColX, 51).Value = "Measurement Date"
+    Range("C11").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Date exposed"
+    Cells(ColX, 51).Value = "Date exposed"
+    Range("C19").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+'   Copy "Date collected"
+    Cells(ColX, 51).Value = "Date collected"
+    Range("C20").Copy
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+
+'   turn months into hours and vice versa
+    If Range("D21").Value = 0 Then
+        If IsEmpty(Range("C21")) = True And IsEmpty(Range("C22")) = True Then
+            Range("C21").Value = 0
+            Range("C22").Value = 0
+        End If
+    End If
+        
+    If IsEmpty(Range("C21")) = False Then
+        If IsEmpty(Range("C22")) Then Range("C22").Value = Range("C21").Value / 24 / 30.5
+        Range("C22").NumberFormat = "0"
+    End If
+    If IsEmpty(Range("C22")) = False Then
+        If IsEmpty(Range("C21")) Then Range("C21").Value = Range("C22").Value * 24 * 30.5
+        Range("C21").NumberFormat = "0"
+    End If
+'   Copy "Duration, hours"
+    Cells(ColX, 51).Value = "Exposure Duration (hours)"
+    Range("C21").Copy
+    'If IsNumeric(Range("C21")) = True Then Cells(ColX, 52).PasteSpecial xlPasteValues
+    Cells(ColX, 52).PasteSpecial xlPasteValues
+    ColX = ColX + 1
+  
+'   Copy "Duration, months"
+    Cells(ColX, 51).Value = "Exposure Duration (months"
+    Range("C22").Copy
+
+
+Sub ExportTransmittancetable()
+
+'
+
+' Export of the Data from the Excel sheet coming from Lambda into one mastertable for transmittance
+
+'
+
+'   Turn off switching between windows during copying
+
+    Application.ScreenUpdating = False
+
+'   Take the now active workbook to copy data from
+
+    TheBook = ActiveWorkbook.Name
+
+    TheSheet = ActiveSheet.Name
+
+   
+
+    Columns(51).ClearContents
+
+    Columns(52).ClearContents
+
+ 
+
+'   Copy "Sample Code"
+
+    Range("AY1").Value = "Sample Code"
+
+    Range("C5").Copy
+
+    Range("AZ1").PasteSpecial xlPasteValues
+
+   
+
+'   Copy "OPAC Code"
+
+    Range("AY2").Value = "OPAC Code"
+
+    Range("C8").Copy
+
+    Range("AZ2").PasteSpecial xlPasteValues
+
+'   Copy "Material Code"
+
+    Range("AY3").Value = "Material Code"
+
+    Range("C9").Copy
+
+    Range("AZ3").PasteSpecial xlPasteValues
+
+'   Copy "Manufacturer"
+
+    Range("AY4").Value = "Manufacturer"
+
+    Range("C7").Copy
+
+    Range("AZ4").PasteSpecial xlPasteValues
+
+'   Copy "Project"
+
+    Range("AY5").Value = "Project"
+
+    Range("C10").Copy
+
+    Range("AZ5").PasteSpecial xlPasteValues
+
+'   Copy "Site/Test"
+
+    Range("AY6").Value = "Site/Test"
+
+    Range("C15").Copy
+
+    Range("AZ6").PasteSpecial xlPasteValues
+
+'   Copy "Position/Observation"
+
+    Range("AY7").Value = "Position/Observation"
+
+    Range("C16").Copy
+
+    Range("AZ7").PasteSpecial xlPasteValues
+
+'   Copy "Thickness"
+
+    Range("AY12").Value = "Thickness"
+
+    Range("C17").Copy
+
+    Range("AZ12").PasteSpecial xlPasteValues
+
+'   Copy "Size"
+
+    Range("AY13").Value = "Size"
+
+    Range("C18").Copy
+
+    Range("AZ13").PasteSpecial xlPasteValues
+
+'   Copy "Measurement Date"
+
+    Range("AY14").Value = "Measurement Date"
+
+    Range("C11").Copy
+
+    Range("AZ14").PasteSpecial xlPasteValues
+
+'   Copy "Date exposed"
+
+    Range("AY15").Value = "Date exposed"
+
+    Range("C19").Copy
+
+    Range("AZ15").PasteSpecial xlPasteValues
+
+'   Copy "Date collected"
+
+    Range("AY16").Value = "Date collected"
+
+    Range("C20").Copy
+
+    Range("AZ16").PasteSpecial xlPasteValues
+
+'   Copy "Duration"
+
+    Range("AY17").Value = "Expsosure Duration"
+
+    Range("C21").Copy
+
+    Range("AZ17").PasteSpecial xlPasteValues
+
+         
+
+   
+
+'   Copy solar-weighted hemispherical reflectance
+
+    Range("AY18").Value = "solar-weighted transmittance"
+
+    Range("C30").Copy
+
+    If IsNumeric(Range("C30")) = True Then Range("AZ18").PasteSpecial xlPasteValues
+
+   
+
+    If IsNumeric(Range("D30")) = True Then Range("AZ19").Value = "±"
+
+       
+
+    Range("D30").Copy
+
+    If IsNumeric(Range("D30")) = True Then Range("AZ20").PasteSpecial xlPasteValues
+
+       
+
+ 
+
+'   Copy Comments
+
+    Range("AY27").Value = "Comments"
+
+    Range("C22").Copy
+
+    Range("AZ27").PasteSpecial xlPasteValues
+
+ 
+
+ 
+
+'   Copy hemispherical reflectance spectrum
+
+    Range("AY37").Value = "hemispherical reflectance spectrum"
+
+    Range("AB75:AB525").Copy
+
+    If IsNumeric(Range("AB75")) = True Then Range("AZ38").PasteSpecial xlPasteValues
+
+ 
+
+   
+
+'   Open Table
+
+    Workbooks.Open Filename:="\\newsol\reflectores\TableSamplesALL\Transmittance\OPAC_TableTransmittanceALL.xlsx"
+
+    Dim LastRow As Long
+
+    LastRow = Workbooks("OPAC_TableTransmittanceALL.xlsx").Sheets("TransmittanceALL").Cells(Rows.Count, 1).End(xlUp).Offset(1).Row
+
+     
+
+'   Activate Table
+
+    Windows(TheBook).Activate
+
+    Worksheets(TheSheet).Activate
+
+    Range("AZ1:AZ488").Copy
+
+        
+
+    Workbooks("OPAC_TableTransmittanceALL.xlsx").Sheets("TransmittanceALL").Cells(LastRow, 1).PasteSpecial _
+
+        xlPasteValues, Transpose:=True
+
+   
+
+'   Save and close table
+
+    Workbooks("OPAC_TableTransmittanceALL.xlsx").Save
+
+    Workbooks("OPAC_TableTransmittanceALL.xlsx").Close
+
+   
+
+    Application.ScreenUpdating = True
+
+
+

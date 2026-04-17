@@ -1,0 +1,38 @@
+# Ejecutables compilados
+dist/
+build/
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Logs generados en ejecución
+logs/
+
+# Archivos de datos reales (no publicar)
+*.xlsm
+ReflectanceALL_test.xlsx
+test_reflectancia.xlsx
+
+# Plantillas originales de laboratorio (usar demo/ en su lugar)
+plantillas/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

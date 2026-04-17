@@ -1,0 +1,364 @@
+{
+  "version": "1.0",
+  "descripcion": "Configuración para el programa de exportación de datos ópticos. EDITE ESTE ARCHIVO para especificar los paths de sus archivos Excel destino.",
+  "reflectancia": {
+    "archivo_destino": "C:/ruta/a/tu/archivo/TableReflectanceALL.xlsm",
+    "nombre_hoja": "ReflectorsALL",
+    "descripcion": "Configuración para exportar datos de reflectancia",
+    "celdas": [
+      {
+        "origen": "C5",
+        "concepto": "Sample Code",
+        "columna_destino": 1
+      },
+      {
+        "origen": "C7",
+        "concepto": "Manufacturer",
+        "columna_destino": 4
+      },
+      {
+        "origen": "C8",
+        "concepto": "OPAC Code",
+        "columna_destino": 2
+      },
+      {
+        "origen": "C9",
+        "concepto": "Material Code",
+        "columna_destino": 3
+      },
+      {
+        "origen": "C10",
+        "concepto": "Project",
+        "columna_destino": 5
+      },
+      {
+        "origen": "C15",
+        "concepto": "Site/Test",
+        "columna_destino": 6
+      },
+      {
+        "origen": "C16",
+        "concepto": "Position/Observation",
+        "columna_destino": 8
+      },
+      {
+        "origen": "C17",
+        "concepto": "Thickness",
+        "columna_destino": 13
+      },
+      {
+        "origen": "C18",
+        "concepto": "Size X",
+        "columna_destino": 14
+      },
+      {
+        "origen": "D18",
+        "concepto": "Size Y",
+        "columna_destino": 15
+      },
+      {
+        "origen": "G25",
+        "concepto": "Number of Cut Edges",
+        "columna_destino": 16
+      },
+      {
+        "origen": "C11",
+        "concepto": "Measurement Date",
+        "columna_destino": 17
+      },
+      {
+        "origen": "C19",
+        "concepto": "Date Exposed",
+        "columna_destino": 18
+      },
+      {
+        "origen": "C20",
+        "concepto": "Date Collected",
+        "columna_destino": 19
+      },
+      {
+        "origen": "C21",
+        "concepto": "Duration (hours)",
+        "columna_destino": 20
+      },
+      {
+        "origen": "C22",
+        "concepto": "Duration (months)",
+        "columna_destino": 21
+      },
+      {
+        "origen": "C124",
+        "concepto": "±",
+        "columna_destino": [24, 27, 30, 33, 36, 39, 42, 45]
+      },
+      {
+        "origen": "C30",
+        "concepto": "ASTM",
+        "columna_destino": 23
+      },
+      {
+        "origen": "D30",
+        "concepto": "ASTM_std",
+        "columna_destino": 25
+      },
+      {
+        "origen": "C28",
+        "concepto": "ISO",
+        "columna_destino": 29
+      },
+      {
+        "origen": "D28",
+        "concepto": "ISO std",
+        "columna_destino": 31
+      },
+      {
+        "origen": "C31",
+        "concepto": "H660",
+        "columna_destino": 35
+      },
+      {
+        "origen": "E31",
+        "concepto": "H660 std",
+        "columna_destino": 37
+      },
+      {
+        "origen": "C35",
+        "concepto": "Direct660",
+        "columna_destino": 41
+      },
+      {
+        "origen": "D35",
+        "concepto": "Direct660 std",
+        "columna_destino": 43
+      },
+      {
+        "origen": "C24",
+        "concepto": "Comments",
+        "columna_destino": 47
+      },
+      {
+        "origen": "G14",
+        "concepto": "Number of corrosion spots >200µm",
+        "columna_destino": 48
+      },
+      {
+        "origen": "G15",
+        "concepto": "Max. original edge corrosion penetrat.",
+        "columna_destino": 50
+      },
+      {
+        "origen": "G16",
+        "concepto": "Max. cut edge corrosion penetration",
+        "columna_destino": 51
+      },
+      {
+        "origen": "G24",
+        "concepto": "Number of Blisters in paint layer",
+        "columna_destino": 59
+      },
+      {
+        "origen": "AJ79:AJ529",
+        "concepto": "Spectrum",
+        "tipo": "rango",
+        "columna_destino": 63
+      }
+
+    ]
+  },
+  "transmitancia_pv": {
+    "archivo_destino": "C:/ruta/a/tu/archivo/TableTransmittanceALL.xlsx",
+    "nombre_hoja": "TransmittanceALL",
+    "descripcion": "Configuración para exportar datos de transmitancia",
+    "celdas": [
+      {
+        "origen": "C5",
+        "concepto": "Sample Code",
+        "columna_destino": 1
+      },
+      {
+        "origen": "C7",
+        "concepto": "Manufacturer",
+        "columna_destino": 4
+      },
+      {
+        "origen": "C8",
+        "concepto": "OPAC Code",
+        "columna_destino": 2
+      },
+      {
+        "origen": "C9",
+        "concepto": "Material Code",
+        "columna_destino": 3
+      },
+      {
+        "origen": "C10",
+        "concepto": "Project",
+        "columna_destino": 5
+      },
+      {
+        "origen": "C15",
+        "concepto": "Site/Test",
+        "columna_destino": 6
+      },
+      {
+        "origen": "C16",
+        "concepto": "Position/Observation",
+        "columna_destino": 7
+      },
+      {
+        "origen": "C17",
+        "concepto": "Thickness",
+        "columna_destino": 12
+      },
+      {
+        "origen": "C18",
+        "concepto": "Size",
+        "columna_destino": 13
+      },
+      {
+        "origen": "C11",
+        "concepto": "Measurement Date",
+        "columna_destino": 14
+      },
+      {
+        "origen": "C19",
+        "concepto": "Date Exposed",
+        "columna_destino": 15
+      },
+      {
+        "origen": "C20",
+        "concepto": "Date Collected",
+        "columna_destino": 16
+      },
+      {
+        "origen": "C21",
+        "concepto": "Exposure Duration",
+        "columna_destino": 17
+      },
+      {
+        "origen": "C22",
+        "concepto": "Comments",
+        "columna_destino": 27
+      },
+      {
+        "origen": "C30",
+        "concepto": "Solar-weighted Transmittance",
+        "columna_destino": 18
+      },
+      {
+        "origen": "C124",
+        "concepto": "±",
+        "columna_destino": 19
+      },
+      {
+        "origen": "D30",
+        "concepto": "Transmittance Uncertainty",
+        "columna_destino": 20
+      },
+      {
+        "origen": "AJ79:AJ529",
+        "concepto": "Spectrum",
+        "tipo": "rango",
+        "columna_destino": 38
+      }
+    ]
+  },
+  "transmitancia_csp": {
+    "archivo_destino": "C:/ruta/a/tu/archivo/TableTransmittanceALL.xlsx",
+    "nombre_hoja": "TransmittanceALL",
+    "descripcion": "Configuración para exportar datos de transmitancia",
+    "celdas": [
+      {
+        "origen": "C5",
+        "concepto": "Sample Code",
+        "columna_destino": 1
+      },
+      {
+        "origen": "C7",
+        "concepto": "Manufacturer",
+        "columna_destino": 4
+      },
+      {
+        "origen": "C8",
+        "concepto": "OPAC Code",
+        "columna_destino": 2
+      },
+      {
+        "origen": "C9",
+        "concepto": "Material Code",
+        "columna_destino": 3
+      },
+      {
+        "origen": "C10",
+        "concepto": "Project",
+        "columna_destino": 5
+      },
+      {
+        "origen": "C15",
+        "concepto": "Site/Test",
+        "columna_destino": 6
+      },
+      {
+        "origen": "C16",
+        "concepto": "Position/Observation",
+        "columna_destino": 7
+      },
+      {
+        "origen": "C17",
+        "concepto": "Thickness",
+        "columna_destino": 12
+      },
+      {
+        "origen": "C18",
+        "concepto": "Size",
+        "columna_destino": 13
+      },
+      {
+        "origen": "C11",
+        "concepto": "Measurement Date",
+        "columna_destino": 14
+      },
+      {
+        "origen": "C19",
+        "concepto": "Date Exposed",
+        "columna_destino": 15
+      },
+      {
+        "origen": "C20",
+        "concepto": "Date Collected",
+        "columna_destino": 16
+      },
+      {
+        "origen": "C21",
+        "concepto": "Exposure Duration",
+        "columna_destino": 17
+      },
+      {
+        "origen": "C124",
+        "concepto": "±",
+        "columna_destino": 19
+      },
+      {
+        "origen": "C22",
+        "concepto": "Comments",
+        "columna_destino": 27
+      },
+      {
+        "origen": "C30",
+        "concepto": "Solar-weighted Transmittance",
+        "columna_destino": 18
+      },
+      {
+        "origen": "D30",
+        "concepto": "Transmittance Uncertainty",
+        "columna_destino": 20
+      },
+      {
+        "origen": "AM80:AM530",
+        "concepto": "Spectrum",
+        "tipo": "rango",
+        "columna_destino": 38
+      }
+    ]
+  }
+}
