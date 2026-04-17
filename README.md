@@ -52,7 +52,7 @@ Para reflectancia, incluye la reimplementación del cálculo `Addlosses`: calcul
 ## Estructura del proyecto
 
 ```
-sustituto_macro/
+optical-data-exporter/
 ├── src/
 │   ├── main.py               # Punto de entrada y orquestación
 │   ├── ui/
@@ -125,7 +125,7 @@ Abre `demo/master_demo.xlsx` para ver las filas exportadas con todos sus metadat
 ## Instalación para desarrollo
 
 ```bash
-git clone https://github.com/tu-usuario/exportador-datos-opticos
+git clone https://github.com/LauraCGuzman/optical-data-exporter
 cd exportador-datos-opticos
 pip install -r requirements.txt
 python src/main.py
