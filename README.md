@@ -1,4 +1,143 @@
-# Exportador de Datos Ópticos
+# Optical Data Exporter/Exportador de Datos Ópticos
+
+(Spanish version below)
+
+A Python tool that automates the export of optical measurements (reflectance and transmittance) from individual Excel sheets into centralized master tables. Built to replace legacy VBA macros in an optical characterization laboratory for CSP solar materials.
+
+Deployed in production as a standalone .exe distributed to laboratory colleagues — no Python installation required on end-user machines.
+
+
+The problem it solved
+The original workflow relied on VBA macros written back in 2008. Over time they accumulated serious limitations:
+
+Fragile to Excel changes: an Office update could break the macro without warning.
+Hard to distribute: every user needed a working VBA environment and macro permissions enabled.
+Opaque logic: unmodularized code, no structured error handling, no traceability.
+Manual process: the technician had to open the master file, run the macro, and trust that it worked.
+
+This project re-implements that entire logic in Python, packages the result as a standalone executable, and adds a graphical interface, validation, error logs, and a modular, testable design.
+
+Technical solution
+Source Excel file             config.json              Destination master file
+(measurement sheet)     →   (cell mapping)       →   (cumulative table)
+     │                                                        │
+     └──── ExcelReader ──── processing ──── ExcelWriter ─────┘
+                                   │
+                          UI (tkinter) + Logger
+The program reads specific cells from each measurement sheet (sample metadata, dates, optical parameters, full 250–2500 nm spectrum), validates them, and writes them into the matching row of the master table, replicating the visual style of the existing rows.
+For reflectance, it includes a re-implementation of the Addlosses calculation: it computes the relative optical loss and the combined uncertainty with respect to each sample's initial value.
+
+Technical skills demonstrated
+
+Python — full business logic, 0 dependency on Excel/VBA
+openpyxl — read_only reading with cell caching, style-preserving writes, .xlsm support with embedded VBA
+tkinter — native cross-platform GUI: main menu, sheet selector with multi-selection and an "all" checkbox, confirmation dialogs
+PyInstaller — packaging as a standalone .exe with embedded data (--add-data)
+Modular architecture — clean Reader / Writer / Config / UI / Validators / Logger separation
+Config-driven design — all cell→column mapping logic externalized to JSON; changing the schema requires no code changes
+Spectral data — handling of 451-point ranges (250–2500 nm) per measurement, with differential rounding (3 dec. for scalars / 4 dec. for the spectrum)
+VBA→Python migration — includes a documented re-implementation of the original logic
+
+
+Project structure
+optical-data-exporter/
+├── src/
+│   ├── main.py               # Entry point and orchestration
+│   ├── ui/
+│   │   └── menu.py           # Graphical interface (tkinter)
+│   ├── core/
+│   │   ├── config.py         # Loading and validation of config.json
+│   │   ├── excel_reader.py   # Reading with caching (read_only compatible)
+│   │   └── excel_writer.py   # Writing, styles, and Addlosses calculation
+│   └── utils/
+│       ├── logger.py         # Error logging with context
+│       └── validators.py     # File and extension validation
+├── config/
+│   ├── config.json           # Path configuration (edit before use)
+│   └── config_demo.json      # Configuration to run the demo
+├── demo/
+│   ├── refl_demo.xlsx        # Synthetic reflectance measurement sheet
+│   ├── trans_pv_demo.xlsx    # Synthetic PV transmittance sheet
+│   ├── trans_csp_demo.xlsx   # Synthetic CSP transmittance sheet
+│   └── master_demo.xlsx      # Destination master table (demo)
+├── requirements.txt
+├── build_exe.py              # Script to build the executable
+└── README.md
+
+Quick demo
+bash# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Run the demo (no GUI, no real data)
+python demo/run_demo.py
+The script automatically processes the synthetic files included in demo/ and shows the full pipeline in the terminal:
+============================================================
+  OPTICAL DATA EXPORTER — DEMO
+============================================================
+  Pipeline: Excel reading → validation → write to master table
+  Data:     synthetic (contains no real measurements)
+
+  ✓  Configuration loaded: config_demo.json
+  ✓  Master table initialized: master_demo.xlsx
+
+────────────────────────────────────────────────────────────
+  1 · Reflectance  (solar mirror — durability test)
+────────────────────────────────────────────────────────────
+
+  Scenario: same sample measured at t=0, t=1 year and t=2 years.
+  The Addlosses module computes the accumulated optical loss.
+
+  →  Exporting: refl_demo.xlsx     [t = 0  (initial measurement)]
+  ✓  → row 3  |  duration: 0 h     |  ASTM: 0.937  |  Addlosses applied
+  →  Exporting: refl_demo_1y.xlsx  [t = 1 year]
+  ✓  → row 4  |  duration: 8760 h  |  ASTM: 0.924  |  Addlosses applied
+  →  Exporting: refl_demo_2y.xlsx  [t = 2 years]
+  ✓  → row 5  |  duration: 17520 h |  ASTM: 0.929  |  Addlosses applied
+  ...
+  ✓  DEMO COMPLETE
+Open demo/master_demo.xlsx to see the exported rows with all their metadata, optical values, and full spectrum.
+
+Development setup
+bashgit clone https://github.com/LauraCGuzman/optical-data-exporter
+cd optical-data-exporter
+pip install -r requirements.txt
+python src/main.py
+Build the executable
+bashpip install pyinstaller
+python build_exe.py
+# The .exe is generated in dist/ as ExportadorDatosOpticos.exe
+For end-user instructions on running the distributed executable, see EXECUTABLE_GUIDE.md.
+
+Configuration
+Edit config/config.json and set the paths to your files:
+json{
+  "reflectance": {
+    "destination_file": "C:/path/to/your/master_table_reflectance.xlsm",
+    "sheet_name": "ReflectorsALL",
+    "cells": [...]
+  },
+  "transmittance_pv": {
+    "destination_file": "C:/path/to/your/master_table_transmittance.xlsx",
+    ...
+  }
+}
+The cell→column mapping is fully externalized: if the schema of your measurement sheet changes, you only need to update the JSON.
+
+Supported measurement types
+TypeExported parametersSpectrumReflectanceASTM, ISO, H660, Direct660 + uncertaintiesAJ79:AJ529 (251–2500 nm)PV transmittanceSolar-weighted transmittanceAJ79:AJ529CSP transmittanceSolar-weighted transmittanceAM80:AM530
+
+Project context
+This program emerged from work with optical characterization data of materials for concentrated solar power (CSP) systems: mirrors, glass covers, and antireflective coatings subjected to field durability tests.
+The original workflow — manually exporting with VBA macros every time a new measurement arrived — did not scale as the sample volume grew. This tool removes the manual step, standardizes the output format, and can be distributed to any technician without setting up a development environment.
+
+Dependencies
+PackageUseopenpyxl >= 3.1Reading and writing Excel filespyinstaller >= 6.0Packaging as a standalone executable
+Standard Python for the rest (tkinter, pathlib, logging, json).
+
+License
+MIT — free to use, modify, and distribute.
+
+---
 
 **Herramienta Python que automatiza la exportación de mediciones ópticas** (reflectancia y transmitancia) desde hojas Excel individuales a tablas maestras centralizadas. Desarrollada para reemplazar macros VBA heredados en un laboratorio de caracterización óptica de materiales solares CSP.
 
